@@ -42,10 +42,11 @@ app:match("/category", respond_to({
       category:update({
         name = self.params.name
       })
-      return {json = {
-        "Updated"
+      return {
+        json = {
+          "Updated"
+        }
       }
-    }
     end
     if self.params.name then
       local category = Categories:create({
@@ -57,7 +58,11 @@ app:match("/category", respond_to({
         }
       }
     end
-    return "Invalid params"
+    return {
+      json = {
+        "Invalid params"
+      }
+    }
   end,
   DELETE = function(self)
     if self.params.id then
@@ -121,7 +126,11 @@ app:match("/product", respond_to({
         }
       }
     end
-    return "Invalid params"
+    return {
+      json = {
+        "Invalid params"
+      }
+    }
   end,
   DELETE = function(self)
     if self.params.id then
