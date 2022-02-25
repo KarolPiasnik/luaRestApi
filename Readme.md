@@ -1,4 +1,4 @@
-This application uses mysql, before running create following databases.  
+This application uses mysql, before running create database named "lapisshop" and following tables.  
 Create table "categories"  
 CREATE TABLE IF NOT EXISTS categories (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255) NOT NULL);  
 Create table "products"  
