@@ -5,12 +5,6 @@ local json_params = require("lapis.application").json_params
 local Model = require("lapis.db.model").Model
 local app = lapis.Application()
 
-products = {}
-productId = 0
-
-categories = {}
-categoryId = 0
-
 local Products = Model:extend("products", {
   primary_key = "id"
 })
