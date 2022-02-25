@@ -2,6 +2,7 @@ local lapis = require("lapis")
 local config = require("lapis.config").get()
 local respond_to = require("lapis.application").respond_to
 local json_params = require("lapis.application").json_params
+local Model = require("lapis.db.model").Model
 local app = lapis.Application()
 
 products = {}
@@ -9,6 +10,14 @@ productId = 0
 
 categories = {}
 categoryId = 0
+
+local Products = Model:extend("products", {
+  primary_key = "id"
+})
+
+local Categories = Model:extend("categories", {
+  primary_key = "id"
+})
 
 app:match("/", function(self)
   return config.greeting .. " from port " .. config.port
@@ -19,40 +28,35 @@ app:match("/category", respond_to({
   end,
   GET = function(self)
     if self.params.id then
-      for key,category in ipairs(categories) do
-        if tostring(category.id) == self.params.id then
-          return {
-            json = {
-              category
-            }
-          }
-        end
-      end
-      return "Failed to retrieve category with given id"
+      local category = Categories:find(self.params.id)
+      return {
+        json = {
+          category
+        }
+      }
     end
+    local categories = Categories:select("")
     return {
       json = {
         categories
       }
-    }  end,
+    }  
+  end,
   POST = function(self)
-    if self.params.id and self.params.name then
-      for key,category in ipairs(categories) do
-        if tostring(category.id) == self.params.id then
-          product={id=self.params.id, name=self.params.name}
-          table.insert(categories, category)
-          return {
-            json = {
-              category
-            }
-          }
-        end
-      end
+    if self.params.name and self.params.id then
+      local category = Categories:find(self.params.id)
+      category:update({
+        name = self.params.name
+      })
+      return {json = {
+        "Updated"
+      }
+    }
     end
-    if self.params.categoryId and self.params.name then
-      product={id=categoryId, name=self.params.name}
-      table.insert(categories, category)
-      categoryId=categoryId+1
+    if self.params.name then
+      local category = Categories:create({
+        name = self.params.name
+      })
       return {
         json = {
           category
@@ -62,51 +66,61 @@ app:match("/category", respond_to({
     return "Invalid params"
   end,
   DELETE = function(self)
-    return "product deleted successfully"
+    if self.params.id then
+      local category = Categories:find(self.params.id)
+      category:delete()
+      return {
+        json = {
+          "Deletion successful"
+        }
+      }
+    end
+    return {
+      json = {
+        "No id provided"
+      }
+    }
   end
 }))
 
 app:match("/product", respond_to({
   before = function(self)
     if self.session.current_user then
-      self:write({ redirect_to = "/" })
     end
   end,
   GET = function(self)
     if self.params.id then
-      for key,product in ipairs(products) do
-        if tostring(category.id) == self.params.id then
-          return {
-            json = {
-              product
-            }
-          }
-        end
-      end
-      return "Failed to retrieve product with given id"
+      local product = Products:find(self.params.id)
+      return {
+        json = {
+          product
+        }
+      }
     end
+    local products = Products:select("")
     return {
       json = {
         products
       }
-    }  end,
+    }  
+  end,
   POST = function(self)
-    if self.params.id and self.params.categoryId and self.params.name then
-      for key,product in ipairs(products) do
-        if tostring(category.id) == self.params.id then
-          product={id=self.params.id, categoryId=self.params.categoryId, name=self.params.name}
-          table.insert(products, product)
-          return {
-            json = {
-              product
-            }
-          }
-        end
-      end
+    if self.params.name and self.params.id and self.params.categoryId then
+      local product = Products:find(self.params.id)
+      product:update({
+        name = self.params.name,
+        category_id = self.params.categoryId
+      })
+      return {json = {
+        "Updated"
+      }
+    }
     end
-    if self.params.categoryId and self.params.name then
-      product={id=productId, categoryId=self.params.categoryId, name=self.params.name}
-      table.insert(products, product)
+    if self.params.name and self.params.categoryId then
+      local product = Products:create({
+        name = self.params.name,
+        category_id = self.params.categoryId
+      })
       return {
         json = {
           product
@@ -117,19 +131,19 @@ app:match("/product", respond_to({
   end,
   DELETE = function(self)
     if self.params.id then
-      for key,category in ipairs(categories) do
-        if tostring(category.id) == self.params.id then
-          categories[key] = nil
-          return {
-            json = {
-              "Product removed successfully"
-            }
-          }
-        end
-      end
-      return "There was no product with given id"
+      local product = Products:find(self.params.id)
+      product:delete()
+      return {
+        json = {
+          "Deletion successful"
+        }
+      }
     end
-    return "No id supplied"
+    return {
+      json = {
+        "No id provided"
+      }
+    }
   end
 }))
 
